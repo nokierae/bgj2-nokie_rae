@@ -6,7 +6,7 @@ on:
       - '*'
 
 env:
-  binary: "bgj2-nokie_rae"
+  binary: "bgj2"
 
 
 jobs:
@@ -150,7 +150,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo build --release --target aarch64j-apple-darwin
+          cargo build --release --target aarch64-apple-darwin
 
       - name: Prepare Package
         run: |
