@@ -1,23 +1,38 @@
-use bevy::asset::AssetServerSettings;
 use bevy::prelude::*;
 
-use bevy_atmosphere::prelude::*;
+use bevy::asset::AssetServer;
+use bevy::ecs::{component::Component, system::Commands, system::Res};
+use bevy::scene::SceneBundle;
+use bevy::utils::default;
+use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 
-fn main() {
-    App::new()
-        // Enable hot reloading
-        .insert_resource(AssetServerSettings {
-            watch_for_changes: true,
+#[derive(Reflect, Component, Default)]
+struct Player;
+
+fn load_scene(mut cmds: Commands, asset_server: Res<AssetServer>) {
+    cmds.spawn_bundle(HookedSceneBundle {
+        hook: SceneHook::new(|entity, cmds| {
+            match entity.get::<Name>().map(|t| t.as_str()) {
+                Some("Player") => cmds.insert(Player),
+                _ => cmds,
+            };
+        }),
+        scene: SceneBundle {
+            scene: asset_server.load("scenes/level1.glb#Scene0"),
             ..default()
-        })
-        .add_plugins(DefaultPlugins)
-        .add_plugin(AtmospherePlugin)
-        .add_startup_system(setup)
-        .run();
+        },
+    });
 }
 
-fn setup(mut commands: Commands) {
-    commands
-        .spawn_bundle(Camera3dBundle::default())
-        .insert(AtmosphereCamera(None));
+fn main() {
+    let mut app = App::new();
+
+    app.add_plugins(DefaultPlugins)
+        .insert_resource(ClearColor(Color::rgb(0.19, 0.16, 0.2)))
+        .add_plugin(HookPlugin)
+        .add_startup_system(load_scene);
+
+    app.add_plugin(bevy_inspector_egui::WorldInspectorPlugin::new());
+
+    app.run();
 }
